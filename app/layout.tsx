@@ -83,7 +83,7 @@ export const metadata: Metadata = {
     creator: "@receiptifyplus",
   },
   verification: {
-    google: "google-site-verification-code", // Add your Google verification code here
+    google: "_Ce7FHzFlQZY8gli3n2M_YavlxKwFgGtM3hjKr9yzCU",
   },
   alternates: {
     canonical: "https://receiptify-plus.vercel.app",
