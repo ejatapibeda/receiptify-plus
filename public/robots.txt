@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://betspot.vercel.app/sitemap.xml
+
+# Disallow search-related pages and API routes
+Disallow: /api/*
+Disallow: /callback/*
