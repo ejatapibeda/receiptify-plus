@@ -63,7 +63,7 @@ export default function ContactPage() {
 
               <div className="mt-4 flex justify-center space-x-4">
                 <a
-                  href="https://github.com/ejatapibeda/receiptify"
+                  href="https://github.com/ejatapibeda/receiptify-plus"
                   className="text-[#b3b3b3] hover:text-[#1DB954] transition-colors duration-300"
                 >
                   <Github className="w-6 h-6" />

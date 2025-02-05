@@ -83,7 +83,11 @@ export function Footer() {
               Connect With Us
             </h3>
             <div className="flex space-x-5">
-              <Link href="https://github.com/ejatapibeda/receiptify" target="_blank" className="group">
+              <Link
+                href="https://github.com/ejatapibeda/receiptify-plus"
+                target="_blank"
+                className="group"
+              >
                 <div className="p-3 rounded-full bg-zinc-900 text-zinc-400 hover:bg-green-500/10 hover:text-green-500 transition-all duration-200 hover:scale-110">
                   <Github className="h-5 w-5" />
                 </div>
@@ -104,7 +108,14 @@ export function Footer() {
               © {new Date().getFullYear()} Receiptify+. All rights reserved.
             </p>
             <p className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors">
-              Made by <a href="https://github.com/ejatapibeda" target="_blank" className="text-green-500 hover:text-green-400">ejatapibeda</a>
+              Made by{" "}
+              <a
+                href="https://github.com/ejatapibeda"
+                target="_blank"
+                className="text-green-500 hover:text-green-400"
+              >
+                ejatapibeda
+              </a>
             </p>
           </div>
         </div>

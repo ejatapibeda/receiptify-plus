@@ -13,45 +13,48 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ejatapibeda.github.io/receiptify'),
+  metadataBase: new URL("https://receiptify-plus.vercel.app/"),
   title: {
     default: "Receiptify+ - Visualize Your Music History",
-    template: "%s | Receiptify+"
+    template: "%s | Receiptify+",
   },
   icons: {
     icon: [
       {
         url: "/favicon/favicon-16x16.png",
         sizes: "16x16",
-        type: "image/png"
+        type: "image/png",
       },
       {
         url: "/favicon/favicon-32x32.png",
         sizes: "32x32",
-        type: "image/png"
-      }
+        type: "image/png",
+      },
     ],
     shortcut: "/favicon/favicon.ico",
     apple: "/favicon/apple-touch-icon.png",
     other: [
       {
         rel: "manifest",
-        url: "/site.webmanifest"
+        url: "/site.webmanifest",
       },
       {
         rel: "android-chrome",
         url: "/favicon/android-chrome-192x192.png",
-        sizes: "192x192"
+        sizes: "192x192",
       },
       {
         rel: "android-chrome",
         url: "/favicon/android-chrome-512x512.png",
-        sizes: "512x512"
-      }
-    ]
+        sizes: "512x512",
+      },
+    ],
   },
-  description: "Transform your Spotify listening history into a beautiful receipt format. View your top tracks, analyze your music taste, and share your listening habits with friends.",
-  keywords: ["Spotify, Receiptify+, Music History, Music Visualization, Spotify Stats, Music Analytics, Top Tracks"],
+  description:
+    "Transform your Spotify listening history into a beautiful receipt format. View your top tracks, analyze your music taste, and share your listening habits with friends.",
+  keywords: [
+    "Spotify, Receiptify+, Music History, Music Visualization, Spotify Stats, Music Analytics, Top Tracks",
+  ],
   authors: [{ name: "Receiptify+" }],
   creator: "Receiptify+",
   publisher: "Receiptify+",
@@ -66,22 +69,24 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://ejatapibeda.github.io/receiptify",
+    url: "https://receiptify-plus.vercel.app",
     title: "Receiptify+ - Visualize Your Music History",
-    description: "Transform your Spotify listening history into a beautiful receipt format. View your top tracks, analyze your music taste, and share your listening habits with friends.",
+    description:
+      "Transform your Spotify listening history into a beautiful receipt format. View your top tracks, analyze your music taste, and share your listening habits with friends.",
     siteName: "Receiptify+",
   },
   twitter: {
     card: "summary_large_image",
     title: "Receiptify+ - Visualize Your Music History",
-    description: "Transform your Spotify listening history into a beautiful receipt format",
+    description:
+      "Transform your Spotify listening history into a beautiful receipt format",
     creator: "@receiptifyplus",
   },
   verification: {
     google: "google-site-verification-code", // Add your Google verification code here
   },
   alternates: {
-    canonical: "https://ejatapibeda.github.io/receiptify",
+    canonical: "https://receiptify-plus.vercel.app",
   },
 };
 

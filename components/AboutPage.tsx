@@ -76,7 +76,7 @@ export default function AboutPage() {
 
             <div className="flex justify-center">
               <a
-                href="https://github.com/ejatapibeda/receiptify"
+                href="https://github.com/ejatapibeda/receiptify-plus"
                 className="text-[#b3b3b3] hover:text-[#1DB954] transition-colors duration-300"
               >
                 <Github className="w-6 h-6" />
@@ -84,7 +84,16 @@ export default function AboutPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2 text-center text-sm text-[#b3b3b3]">
-            <p>Made by <a href="https://github.com/ejatapibeda" target="_blank" className="text-green-500 hover:text-green-400">ejatapibeda</a></p>
+            <p>
+              Made by{" "}
+              <a
+                href="https://github.com/ejatapibeda"
+                target="_blank"
+                className="text-green-500 hover:text-green-400"
+              >
+                ejatapibeda
+              </a>
+            </p>
             <p className="text-xs">© 2025 Receiptify+</p>
           </CardFooter>
         </Card>

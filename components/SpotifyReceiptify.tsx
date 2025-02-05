@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { toast } from "react-hot-toast";
-import debounce from 'lodash/debounce';
-import dynamic from 'next/dynamic';
+import debounce from "lodash/debounce";
+import dynamic from "next/dynamic";
 import {
   Card,
   CardContent,
@@ -47,64 +47,76 @@ interface Track {
 }
 
 // Memoized components
-const MemoizedTrackItem = memo(({ track, index, customization, onTrackClick }: {
-  track: Track;
-  index: number;
-  customization: {
-    mode: string;
-    font: string;
-  };
-  onTrackClick: (track: Track) => void;
-}) => (
-  <div className="flex justify-between items-center group hover:bg-[#282828] p-2 sm:p-3 rounded-md transition-all duration-300 ease-in-out">
-    <div className="flex items-center space-x-2 sm:space-x-4">
-      <span className="text-[#1DB954] w-6 text-right font-mono text-sm sm:text-base">
-        {(index + 2).toString().padStart(2, "0")}
-      </span>
-      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#282828] flex items-center justify-center rounded-md overflow-hidden group-hover:bg-[#1DB954] transition-colors duration-300 relative">
-        <button
-          onClick={() => onTrackClick(track)}
-          className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer hover:bg-black/70 z-10"
-          aria-label={`Play ${track.name}`}
-        >
-          <Play className="w-6 h-6 text-[#1DB954]" />
-        </button>
-        {track.album?.images[0]?.url ? (
-          <img
-            src={track.album.images[0].url}
-            alt={track.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <Music className="w-5 h-5 sm:w-6 sm:h-6 text-[#b3b3b3] group-hover:text-black transition-colors duration-300" />
-        )}
+const MemoizedTrackItem = memo(
+  ({
+    track,
+    index,
+    customization,
+    onTrackClick,
+  }: {
+    track: Track;
+    index: number;
+    customization: {
+      mode: string;
+      font: string;
+    };
+    onTrackClick: (track: Track) => void;
+  }) => (
+    <div className="flex justify-between items-center group hover:bg-[#282828] p-2 sm:p-3 rounded-md transition-all duration-300 ease-in-out">
+      <div className="flex items-center space-x-2 sm:space-x-4">
+        <span className="text-[#1DB954] w-6 text-right font-mono text-sm sm:text-base">
+          {(index + 2).toString().padStart(2, "0")}
+        </span>
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#282828] flex items-center justify-center rounded-md overflow-hidden group-hover:bg-[#1DB954] transition-colors duration-300 relative">
+          <button
+            onClick={() => onTrackClick(track)}
+            className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer hover:bg-black/70 z-10"
+            aria-label={`Play ${track.name}`}
+          >
+            <Play className="w-6 h-6 text-[#1DB954]" />
+          </button>
+          {track.album?.images[0]?.url ? (
+            <img
+              src={track.album.images[0].url}
+              alt={track.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <Music className="w-5 h-5 sm:w-6 sm:h-6 text-[#b3b3b3] group-hover:text-black transition-colors duration-300" />
+          )}
+        </div>
+        <div>
+          <div
+            className={`font-medium transition-colors duration-300 text-sm sm:text-base ${
+              customization.mode === "dark"
+                ? "text-white group-hover:text-[#1DB954]"
+                : "text-gray-900 group-hover:text-[#1DB954]"
+            }`}
+          >
+            {track.name}
+          </div>
+          <div className="text-xs sm:text-sm text-[#b3b3b3]">
+            {track.artist}
+          </div>
+        </div>
       </div>
-      <div>
-        <div className={`font-medium transition-colors duration-300 text-sm sm:text-base ${customization.mode === "dark"
-          ? "text-white group-hover:text-[#1DB954]"
-          : "text-gray-900 group-hover:text-[#1DB954]"
-          }`}>
-          {track.name}
-        </div>
-        <div className="text-xs sm:text-sm text-[#b3b3b3]">
-          {track.artist}
-        </div>
+      <div className="text-xs sm:text-sm text-[#b3b3b3] font-mono">
+        {track.duration}
       </div>
     </div>
-    <div className="text-xs sm:text-sm text-[#b3b3b3] font-mono">
-      {track.duration}
-    </div>
-  </div>
-));
+  )
+);
 
-MemoizedTrackItem.displayName = 'MemoizedTrackItem';
+MemoizedTrackItem.displayName = "MemoizedTrackItem";
 
 // Dynamically import heavy components
-const CustomizationPanel = dynamic(() => import('./CustomizationPanel'), {
+const CustomizationPanel = dynamic(() => import("./CustomizationPanel"), {
   ssr: false,
-  loading: () => <div className="animate-pulse bg-gray-200 h-96 rounded-lg"></div>
+  loading: () => (
+    <div className="animate-pulse bg-gray-200 h-96 rounded-lg"></div>
+  ),
 });
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -206,9 +218,10 @@ export default function SpotifyReceiptify() {
   });
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  const displayDate = useMemo(() =>
-    lastUpdated ? formatDate(lastUpdated) : "Not available",
-    [lastUpdated]);
+  const displayDate = useMemo(
+    () => (lastUpdated ? formatDate(lastUpdated) : "Not available"),
+    [lastUpdated]
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("spotify_access_token");
@@ -240,7 +253,7 @@ export default function SpotifyReceiptify() {
       // Load user profile data and stats
       const [userProfile, stats] = await Promise.all([
         getUserProfile(),
-        getUserStats(customization.period).catch(error => {
+        getUserStats(customization.period).catch((error) => {
           console.error("Error fetching initial stats:", error);
           return {
             totalMinutesListened: 0,
@@ -248,7 +261,7 @@ export default function SpotifyReceiptify() {
             totalLikedSongs: 0,
             allGenres: [],
           };
-        })
+        }),
       ]);
 
       setUserData({
@@ -367,7 +380,8 @@ export default function SpotifyReceiptify() {
 
         // Set fixed width and height like in downloadAsImage
         receiptRef.current.style.width = "758px";
-        receiptRef.current.style.height = customization.tracks === 10 ? "1384px" : originalHeight;
+        receiptRef.current.style.height =
+          customization.tracks === 10 ? "1384px" : originalHeight;
 
         // Generate the image with specified dimensions to match download
         const blob = await domtoimage.toBlob(receiptRef.current, {
@@ -460,10 +474,11 @@ export default function SpotifyReceiptify() {
       });
     } catch (error) {
       console.error("Error creating playlist:", error);
-      if (error instanceof Error && (
-        error.message.includes("token") ||
-        error.message.includes("Missing required environment variables")
-      )) {
+      if (
+        error instanceof Error &&
+        (error.message.includes("token") ||
+          error.message.includes("Missing required environment variables"))
+      ) {
         localStorage.removeItem("spotify_access_token");
         localStorage.removeItem("spotify_refresh_token");
         localStorage.removeItem("token_expiration");
@@ -519,22 +534,25 @@ export default function SpotifyReceiptify() {
     await loadUserData();
   }, [loadUserData]);
 
-  const handleCustomize = useCallback((newCustomization: any) => {
-    // Clear relevant cache when customization changes
-    const cacheKeys = ["topTracks", "topArtists", "userStats"];
-    cacheKeys.forEach(key => cache.delete(key));
+  const handleCustomize = useCallback(
+    (newCustomization: any) => {
+      // Clear relevant cache when customization changes
+      const cacheKeys = ["topTracks", "topArtists", "userStats"];
+      cacheKeys.forEach((key) => cache.delete(key));
 
-    setCustomization(prev => {
-      if (
-        prev.period !== newCustomization.period ||
-        prev.tracks !== newCustomization.tracks ||
-        prev.metric !== newCustomization.metric
-      ) {
-        loadUserData();
-      }
-      return newCustomization;
-    });
-  }, [loadUserData]);
+      setCustomization((prev) => {
+        if (
+          prev.period !== newCustomization.period ||
+          prev.tracks !== newCustomization.tracks ||
+          prev.metric !== newCustomization.metric
+        ) {
+          loadUserData();
+        }
+        return newCustomization;
+      });
+    },
+    [loadUserData]
+  );
 
   const downloadAsImage = async () => {
     if (!isLoggedIn) {
@@ -558,7 +576,8 @@ export default function SpotifyReceiptify() {
 
         // Set fixed width and height
         receiptRef.current.style.width = "758px";
-        receiptRef.current.style.height = customization.tracks === 10 ? "1384px" : originalHeight;
+        receiptRef.current.style.height =
+          customization.tracks === 10 ? "1384px" : originalHeight;
 
         // Generate the image with specified dimensions
         const dataUrl = await domtoimage.toPng(receiptRef.current, {
@@ -641,22 +660,25 @@ export default function SpotifyReceiptify() {
       <div className="flex flex-col lg:flex-row gap-4 w-full max-w-7xl mx-auto">
         <Card
           ref={receiptRef}
-          className={`w-full lg:w-3/5 border-none shadow-2xl rounded-xl overflow-hidden ${customization.mode === "dark" ? "bg-[#181818]" : "bg-white"
-            } ${getFontClass(customization.font)}`}
+          className={`w-full lg:w-3/5 border-none shadow-2xl rounded-xl overflow-hidden ${
+            customization.mode === "dark" ? "bg-[#181818]" : "bg-white"
+          } ${getFontClass(customization.font)}`}
         >
           {/* Header Section */}
           <CardHeader
-            className={`border-b p-3 sm:p-6 ${customization.mode === "dark"
-              ? "border-[#282828] bg-[#282828]"
-              : "border-gray-100 bg-gray-50"
-              }`}
+            className={`border-b p-3 sm:p-6 ${
+              customization.mode === "dark"
+                ? "border-[#282828] bg-[#282828]"
+                : "border-gray-100 bg-gray-50"
+            }`}
           >
             <div className="flex items-center justify-between w-full mb-4">
               <CardTitle
-                className={`text-2xl sm:text-4xl font-bold flex items-center ${customization.mode === "dark"
-                  ? "text-[#1DB954]"
-                  : "text-[#1DB954]"
-                  }`}
+                className={`text-2xl sm:text-4xl font-bold flex items-center ${
+                  customization.mode === "dark"
+                    ? "text-[#1DB954]"
+                    : "text-[#1DB954]"
+                }`}
               >
                 <Music className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3" />
                 <span>Receiptify+</span>
@@ -693,8 +715,9 @@ export default function SpotifyReceiptify() {
                         disabled={isLoading}
                       >
                         <RefreshCw
-                          className={`h-4 w-4 text-black hover:text-white ${isLoading ? "animate-spin" : ""
-                            }`}
+                          className={`h-4 w-4 text-black hover:text-white ${
+                            isLoading ? "animate-spin" : ""
+                          }`}
                         />
                       </Button>
                     </TooltipTrigger>
@@ -703,7 +726,6 @@ export default function SpotifyReceiptify() {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-
               </div>
 
               {/* Mobile dropdown */}
@@ -735,8 +757,9 @@ export default function SpotifyReceiptify() {
                       className="text-white hover:text-black hover:bg-[#1DB954] cursor-pointer"
                     >
                       <RefreshCw
-                        className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""
-                          }`}
+                        className={`h-4 w-4 mr-2 ${
+                          isLoading ? "animate-spin" : ""
+                        }`}
                       />
                       Refresh Data
                     </DropdownMenuItem>
@@ -762,7 +785,13 @@ export default function SpotifyReceiptify() {
                           ) : (
                             <User className="w-5 h-5 text-[#1DB954]" />
                           )}
-                          <span className={`text-base sm:text-lg font-medium ${customization.mode === "dark" ? "text-white" : "text-black"}`}>
+                          <span
+                            className={`text-base sm:text-lg font-medium ${
+                              customization.mode === "dark"
+                                ? "text-white"
+                                : "text-black"
+                            }`}
+                          >
                             {userData.userName}
                           </span>
                         </div>
@@ -774,11 +803,23 @@ export default function SpotifyReceiptify() {
                         </Badge>
                       </div>
                     </HoverCardTrigger>
-                    <HoverCardContent className={`w-72 sm:w-80 ${customization.mode === "dark" ? "bg-[#282828]" : "bg-white"} border-[#1DB954]`}>
+                    <HoverCardContent
+                      className={`w-72 sm:w-80 ${
+                        customization.mode === "dark"
+                          ? "bg-[#282828]"
+                          : "bg-white"
+                      } border-[#1DB954]`}
+                    >
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <Headphones className="w-4 h-4 text-[#1DB954]" />
-                          <span className={`${customization.mode === "dark" ? "text-white" : "text-black"}`}>
+                          <span
+                            className={`${
+                              customization.mode === "dark"
+                                ? "text-white"
+                                : "text-black"
+                            }`}
+                          >
                             {formatListeningTime(
                               userStats.totalMinutesListened
                             )}{" "}
@@ -787,13 +828,25 @@ export default function SpotifyReceiptify() {
                         </div>
                         <div className="flex items-center space-x-2">
                           <Clock className="w-4 h-4 text-[#1DB954]" />
-                          <span className={`${customization.mode === "dark" ? "text-white" : "text-black"}`}>
+                          <span
+                            className={`${
+                              customization.mode === "dark"
+                                ? "text-white"
+                                : "text-black"
+                            }`}
+                          >
                             Most active: {userStats.favoriteDayTime}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Heart className="w-4 h-4 text-[#1DB954]" />
-                          <span className={`${customization.mode === "dark" ? "text-white" : "text-black"}`}>
+                          <span
+                            className={`${
+                              customization.mode === "dark"
+                                ? "text-white"
+                                : "text-black"
+                            }`}
+                          >
                             {userStats.totalLikedSongs} liked songs
                           </span>
                         </div>
@@ -808,8 +861,8 @@ export default function SpotifyReceiptify() {
                     {customization.period === "short_term"
                       ? "Last 4 weeks"
                       : customization.period === "medium_term"
-                        ? "Last 6 months"
-                        : "All time"}
+                      ? "Last 6 months"
+                      : "All time"}
                   </span>
                 </div>
               </div>
@@ -823,10 +876,11 @@ export default function SpotifyReceiptify() {
 
           {/* Content Section */}
           <CardContent
-            className={`p-3 sm:p-6 ${customization.mode === "dark"
-              ? "bg-gradient-to-b from-[#181818] to-[#282828]"
-              : "bg-gradient-to-b from-white to-gray-50"
-              }`}
+            className={`p-3 sm:p-6 ${
+              customization.mode === "dark"
+                ? "bg-gradient-to-b from-[#181818] to-[#282828]"
+                : "bg-gradient-to-b from-white to-gray-50"
+            }`}
           >
             <div className="text-xl sm:text-2xl font-semibold text-[#1DB954] mb-4 sm:mb-6">
               {customization.metric === "top_tracks" && "Your Top Tracks"}
@@ -839,19 +893,21 @@ export default function SpotifyReceiptify() {
               <>
                 {/* Top Track Card */}
                 <div
-                  className={`mb-6 sm:mb-8 ${customization.mode === "dark"
-                    ? "bg-[#1e1e1e]"
-                    : "bg-gray-50"
-                    } p-4 sm:p-6 rounded-lg shadow-lg relative overflow-hidden`}
+                  className={`mb-6 sm:mb-8 ${
+                    customization.mode === "dark"
+                      ? "bg-[#1e1e1e]"
+                      : "bg-gray-50"
+                  } p-4 sm:p-6 rounded-lg shadow-lg relative overflow-hidden`}
                 >
                   <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1DB954] via-[#22c55e] to-[#1DB954]"></div>
                   <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                     <div className="flex-1">
                       <div
-                        className={`text-2xl sm:text-3xl font-bold mb-2 text-center sm:text-left ${customization.mode === "dark"
-                          ? "text-white"
-                          : "text-gray-900"
-                          } ${getFontClass(customization.font)}`}
+                        className={`text-2xl sm:text-3xl font-bold mb-2 text-center sm:text-left ${
+                          customization.mode === "dark"
+                            ? "text-white"
+                            : "text-gray-900"
+                        } ${getFontClass(customization.font)}`}
                       >
                         {tracks[0].name}
                       </div>
@@ -863,20 +919,22 @@ export default function SpotifyReceiptify() {
                         {tracks[0].artist}
                       </div>
                       <div
-                        className={`flex items-center justify-center sm:justify-start text-sm ${customization.mode === "dark"
-                          ? "text-[#b3b3b3]"
-                          : "text-gray-600"
-                          }`}
+                        className={`flex items-center justify-center sm:justify-start text-sm ${
+                          customization.mode === "dark"
+                            ? "text-[#b3b3b3]"
+                            : "text-gray-600"
+                        }`}
                       >
                         <Clock className="w-4 h-4 mr-2" />
                         {tracks[0].duration}
                       </div>
                     </div>
                     <div
-                      className={`w-24 h-24 sm:w-32 sm:h-32 bg-[#1DB954] rounded-full flex items-center justify-center relative ${customization.mode === "dark"
-                        ? "border-[#1e1e1e]"
-                        : "border-gray-50"
-                        } border-8`}
+                      className={`w-24 h-24 sm:w-32 sm:h-32 bg-[#1DB954] rounded-full flex items-center justify-center relative ${
+                        customization.mode === "dark"
+                          ? "border-[#1e1e1e]"
+                          : "border-gray-50"
+                      } border-8`}
                     >
                       {/* Play button that appears on hover */}
                       <button
@@ -900,10 +958,11 @@ export default function SpotifyReceiptify() {
                         />
                       ) : (
                         <div
-                          className={`w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center ${customization.mode === "dark"
-                            ? "bg-[#1e1e1e]"
-                            : "bg-gray-100"
-                            }`}
+                          className={`w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center ${
+                            customization.mode === "dark"
+                              ? "bg-[#1e1e1e]"
+                              : "bg-gray-100"
+                          }`}
                         >
                           <Music className="w-8 h-8 sm:w-12 sm:h-12 text-[#1DB954]" />
                         </div>
@@ -1178,10 +1237,11 @@ export default function SpotifyReceiptify() {
                       (time) => (
                         <div
                           key={time}
-                          className={`p-3 rounded-lg text-center ${time === userStats.favoriteDayTime
-                            ? "bg-[#1DB954] text-black"
-                            : "bg-[#1e1e1e] text-[#b3b3b3]"
-                            }`}
+                          className={`p-3 rounded-lg text-center ${
+                            time === userStats.favoriteDayTime
+                              ? "bg-[#1DB954] text-black"
+                              : "bg-[#1e1e1e] text-[#b3b3b3]"
+                          }`}
                         >
                           <div className="text-sm font-medium">{time}</div>
                         </div>
@@ -1253,8 +1313,9 @@ export default function SpotifyReceiptify() {
           {/* Footer Section */}
           <Separator className="bg-[#282828]" />
           <CardFooter
-            className={`flex flex-col sm:flex-row justify-between p-3 sm:p-6 ${customization.mode === "dark" ? "bg-[#282828]" : "bg-gray-50"
-              } ${getFontClass(customization.font)}`}
+            className={`flex flex-col sm:flex-row justify-between p-3 sm:p-6 ${
+              customization.mode === "dark" ? "bg-[#282828]" : "bg-gray-50"
+            } ${getFontClass(customization.font)}`}
           >
             <div className="flex items-center space-x-2 text-[#b3b3b3]">
               <Music className="w-4 h-4" />
@@ -1264,7 +1325,7 @@ export default function SpotifyReceiptify() {
             </div>
             <div className="flex items-center text-neutral-400">
               <span className="text-xs sm:text-sm font-medium">
-                receiptifyplus.vercel.app
+                receiptify-plus.vercel.app
               </span>
             </div>
             <div className="flex items-center space-x-2 text-[#b3b3b3]">
