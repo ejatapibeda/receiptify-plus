@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Mail, Github, Twitter } from "lucide-react";
+import { Mail, Github } from "lucide-react";
 
 export default function ContactPage() {
   return (
@@ -35,6 +35,12 @@ export default function ContactPage() {
               <div className="text-left text-[#b3b3b3]">
                 <div className="mb-4">
                   <h3 className="text-[#1DB954] font-semibold mb-2">Email</h3>
+                  <p className="text-sm">muhammadeja44@gmail.com</p>
+                </div>
+                <div className="mb-4">
+                  <h3 className="text-[#1DB954] font-semibold mb-2">
+                    Business Inquiries
+                  </h3>
                   <p className="text-sm">muhammadeja44@gmail.com</p>
                 </div>
                 <div>

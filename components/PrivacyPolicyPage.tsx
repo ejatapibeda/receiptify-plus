@@ -140,7 +140,7 @@ export default function PrivacyPolicyPage() {
                 If you have any questions about our Privacy Policy, please
                 contact us at{" "}
                 <a
-                  href="mailto:privacy@receiptify-plus.com"
+                  href="mailto:muhammadeja44@gmail.com"
                   className="text-[#1DB954] hover:underline hover:text-green-400 transition-colors duration-200"
                 >
                   muhammadeja44@gmail.com

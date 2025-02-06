@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import type { BadgeProps } from "@/components/ui/badge";
 import { toast } from "react-hot-toast";
-import debounce from "lodash/debounce";
-import dynamic from "next/dynamic";
 import {
   Card,
   CardContent,
@@ -11,113 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-// Cache implementation
-const cache = new Map();
-const CACHE_TIME = 5 * 60 * 1000; // 5 minutes
-
-const getCacheKey = (key: string, params?: any) =>
-  `${key}-${JSON.stringify(params)}`;
-
-const getCachedData = (key: string) => {
-  const data = cache.get(key);
-  if (data && Date.now() - data.timestamp < CACHE_TIME) {
-    return data.value;
-  }
-  cache.delete(key);
-  return null;
-};
-
-const setCachedData = (key: string, value: any) => {
-  cache.set(key, { value, timestamp: Date.now() });
-};
-
-// Types
-interface Track {
-  id: string;
-  name: string;
-  artist: string;
-  duration: string;
-  uri: string;
-  album?: {
-    images: Array<{
-      url: string;
-    }>;
-  };
-}
-
-// Memoized components
-const MemoizedTrackItem = memo(
-  ({
-    track,
-    index,
-    customization,
-    onTrackClick,
-  }: {
-    track: Track;
-    index: number;
-    customization: {
-      mode: string;
-      font: string;
-    };
-    onTrackClick: (track: Track) => void;
-  }) => (
-    <div className="flex justify-between items-center group hover:bg-[#282828] p-2 sm:p-3 rounded-md transition-all duration-300 ease-in-out">
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        <span className="text-[#1DB954] w-6 text-right font-mono text-sm sm:text-base">
-          {(index + 2).toString().padStart(2, "0")}
-        </span>
-        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#282828] flex items-center justify-center rounded-md overflow-hidden group-hover:bg-[#1DB954] transition-colors duration-300 relative">
-          <button
-            onClick={() => onTrackClick(track)}
-            className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer hover:bg-black/70 z-10"
-            aria-label={`Play ${track.name}`}
-          >
-            <Play className="w-6 h-6 text-[#1DB954]" />
-          </button>
-          {track.album?.images[0]?.url ? (
-            <img
-              src={track.album.images[0].url}
-              alt={track.name}
-              className="w-full h-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <Music className="w-5 h-5 sm:w-6 sm:h-6 text-[#b3b3b3] group-hover:text-black transition-colors duration-300" />
-          )}
-        </div>
-        <div>
-          <div
-            className={`font-medium transition-colors duration-300 text-sm sm:text-base ${
-              customization.mode === "dark"
-                ? "text-white group-hover:text-[#1DB954]"
-                : "text-gray-900 group-hover:text-[#1DB954]"
-            }`}
-          >
-            {track.name}
-          </div>
-          <div className="text-xs sm:text-sm text-[#b3b3b3]">
-            {track.artist}
-          </div>
-        </div>
-      </div>
-      <div className="text-xs sm:text-sm text-[#b3b3b3] font-mono">
-        {track.duration}
-      </div>
-    </div>
-  )
-);
-
-MemoizedTrackItem.displayName = "MemoizedTrackItem";
-
-// Dynamically import heavy components
-const CustomizationPanel = dynamic(() => import("./CustomizationPanel"), {
-  ssr: false,
-  loading: () => (
-    <div className="animate-pulse bg-gray-200 h-96 rounded-lg"></div>
-  ),
-});
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import {
@@ -151,6 +43,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
+import CustomizationPanel from "./CustomizationPanel";
 import LoginPage from "./LoginPage";
 import domtoimage from "dom-to-image";
 import {
@@ -187,51 +80,73 @@ interface Track {
   };
 }
 
+interface Artist {
+  id: string;
+  name: string;
+  genres: string[];
+  followers: {
+    total: number;
+  };
+  images: Array<{
+    url: string;
+  }>;
+  external_urls: {
+    spotify: string;
+  };
+}
+
+interface Genre {
+  name: string;
+  percentage: number;
+}
+
+interface CustomizationType {
+  metric: "top_tracks" | "top_artists" | "stats" | "top_genres";
+  tracks: number;
+  period: TimeRange;
+  mode: "dark" | "light";
+  font: "sans" | "serif" | "mono";
+}
+
 type TimeRange = "short_term" | "medium_term" | "long_term";
 
 export default function SpotifyReceiptify() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [userData, setUserData] = useState({
-    userName: "",
-    badge: "",
-    profileImage: "",
-  });
+  const [userName, setUserName] = useState("");
+  const [badge, setBadge] = useState("");
+  const [profileImage, setProfileImage] = useState<string>("");
   const [tracks, setTracks] = useState<Track[]>([]);
-  const [userStats, setUserStats] = useState({
+  const [userStats, setUserStats] = useState<{
+    totalMinutesListened: number;
+    favoriteDayTime: string;
+    totalLikedSongs: number;
+    allGenres: { name: string; percentage: number }[];
+  }>({
     totalMinutesListened: 0,
     favoriteDayTime: "",
     totalLikedSongs: 0,
-    allGenres: [] as { name: string; percentage: number }[],
+    allGenres: [],
   });
 
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [displayDate, setDisplayDate] = useState<string>("");
   const [topArtists, setTopArtists] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTracks, setIsLoadingTracks] = useState(false);
   const [customization, setCustomization] = useState({
     metric: "top_tracks",
     tracks: 10,
-    period: "short_term" as TimeRange,
+    period: "short_term" as TimeRange, // Add type assertion here
     mode: "dark",
     font: "sans",
   });
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  const displayDate = useMemo(
-    () => (lastUpdated ? formatDate(lastUpdated) : "Not available"),
-    [lastUpdated]
-  );
-
   useEffect(() => {
     const token = localStorage.getItem("spotify_access_token");
     if (token) {
       setIsLoggedIn(true);
-      loadUserData().finally(() => {
-        setIsInitialLoad(false);
-      });
-    } else {
-      setIsInitialLoad(false);
+      loadUserData();
     }
   }, []);
 
@@ -246,33 +161,36 @@ export default function SpotifyReceiptify() {
     customization.tracks,
   ]);
 
+  useEffect(() => {
+    if (lastUpdated) {
+      const formattedDate = formatDate(lastUpdated);
+      setDisplayDate(formattedDate);
+    } else {
+      setDisplayDate("Not available");
+    }
+  }, [lastUpdated]);
+
   const loadUserData = async () => {
+    // Set loading state at the very beginning
+    setIsLoadingTracks(true);
+
     try {
-      setIsLoadingTracks(true);
+      // Load user profile data
+      const userProfile = await getUserProfile();
+      setUserName(userProfile.display_name || "");
+      setBadge(userProfile.product);
+      setProfileImage(userProfile.images?.[0]?.url || "");
 
-      // Load user profile data and stats
-      const [userProfile, stats] = await Promise.all([
-        getUserProfile(),
-        getUserStats(customization.period).catch((error) => {
-          console.error("Error fetching initial stats:", error);
-          return {
-            totalMinutesListened: 0,
-            favoriteDayTime: "Not available",
-            totalLikedSongs: 0,
-            allGenres: [],
-          };
-        }),
-      ]);
+      // Fetch user stats first
+      try {
+        const stats = await getUserStats(customization.period);
+        setUserStats(stats);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        toast.error("Failed to load stats. Please try again.");
+      }
 
-      setUserData({
-        userName: userProfile.display_name || "",
-        badge: userProfile.product,
-        profileImage: userProfile.images?.[0]?.url || "",
-      });
-
-      setUserStats(stats);
-
-      // Handle different metrics
+      // Then handle different metrics
       switch (customization.metric) {
         case "top_tracks":
           // Load tracks data
@@ -305,17 +223,6 @@ export default function SpotifyReceiptify() {
           );
           setTopArtists(artistsData.items);
           break;
-
-        case "stats":
-        case "top_genres":
-          try {
-            const stats = await getUserStats(customization.period);
-            setUserStats(stats);
-          } catch (error) {
-            console.error("Error fetching stats:", error);
-            toast.error("Failed to load stats. Please try again.");
-          }
-          break;
       }
 
       // Update last updated timestamp
@@ -327,8 +234,7 @@ export default function SpotifyReceiptify() {
         error instanceof Error &&
         (error.message.includes("token") ||
           error.message.includes("unauthorized") ||
-          error.message.includes("expired") ||
-          error.message.includes("Missing required environment variables"))
+          error.message.includes("expired"))
       ) {
         // Clear tokens and reset login state
         localStorage.removeItem("spotify_access_token");
@@ -353,14 +259,6 @@ export default function SpotifyReceiptify() {
 
   const handleShare = async () => {
     try {
-      if (!isLoggedIn) {
-        toast.error("Please log in to share your stats", {
-          duration: 3000,
-          position: "top-center",
-        });
-        return;
-      }
-
       // Check if running on mobile device
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
@@ -369,29 +267,36 @@ export default function SpotifyReceiptify() {
           throw new Error("Receipt element not found");
         }
 
-        toast.loading("Preparing image...", {
-          duration: 2000,
-          position: "top-center",
-        });
-
         // Store original styles
         const originalWidth = receiptRef.current.style.width;
         const originalHeight = receiptRef.current.style.height;
 
-        // Set fixed width and height like in downloadAsImage
+        // Set fixed width like in downloadAsImage
         receiptRef.current.style.width = "758px";
-        receiptRef.current.style.height =
-          customization.tracks === 10 ? "1384px" : originalHeight;
 
-        // Generate the image with specified dimensions to match download
-        const blob = await domtoimage.toBlob(receiptRef.current, {
-          width: 758,
-          height: customization.tracks === 10 ? 1384 : parseInt(originalHeight),
-          style: {
-            transform: "scale(1)",
-            transformOrigin: "top left",
-          },
-        });
+        // Calculate height based on metric type and number of items
+        let height;
+        if (customization.tracks === 10) {
+          height = "1304px"; // Original height for 10 tracks/artists
+        }
+
+        // Generate the image with same dimensions as download
+        if (!height) {
+          throw new Error("Failed to calculate receipt height");
+        }
+
+        const blob = await domtoimage
+          .toBlob(receiptRef.current, {
+            width: 758,
+            height: parseInt(height),
+            style: {
+              transform: "scale(1)",
+              transformOrigin: "top left",
+            },
+          })
+          .catch((error) => {
+            throw new Error(`Failed to generate image: ${error.message}`);
+          });
 
         // Restore original styles
         receiptRef.current.style.width = originalWidth;
@@ -460,10 +365,10 @@ export default function SpotifyReceiptify() {
     try {
       setIsLoading(true);
       const trackUris = tracks.map((track) => track.uri);
-      if (!userData.userName) {
+      if (!userName) {
         throw new Error("Username not found");
       }
-      await createPlaylist(userData.userName, trackUris, playlistName);
+      await createPlaylist(userName, trackUris, playlistName);
       toast.success("Playlist created successfully!", {
         duration: 3000,
         position: "top-center",
@@ -474,11 +379,7 @@ export default function SpotifyReceiptify() {
       });
     } catch (error) {
       console.error("Error creating playlist:", error);
-      if (
-        error instanceof Error &&
-        (error.message.includes("token") ||
-          error.message.includes("Missing required environment variables"))
-      ) {
+      if (error instanceof Error && error.message.includes("token")) {
         localStorage.removeItem("spotify_access_token");
         localStorage.removeItem("spotify_refresh_token");
         localStorage.removeItem("token_expiration");
@@ -530,42 +431,28 @@ export default function SpotifyReceiptify() {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  const handleRefreshData = useCallback(async () => {
+  const handleRefreshData = async () => {
+    console.log("Refreshing data...");
+    console.log("Current customization:", customization);
     await loadUserData();
-  }, [loadUserData]);
+  };
 
-  const handleCustomize = useCallback(
-    (newCustomization: any) => {
-      // Clear relevant cache when customization changes
-      const cacheKeys = ["topTracks", "topArtists", "userStats"];
-      cacheKeys.forEach((key) => cache.delete(key));
-
-      setCustomization((prev) => {
-        if (
-          prev.period !== newCustomization.period ||
-          prev.tracks !== newCustomization.tracks ||
-          prev.metric !== newCustomization.metric
-        ) {
-          loadUserData();
-        }
-        return newCustomization;
-      });
-    },
-    [loadUserData]
-  );
+  const handleCustomize = (newCustomization: any) => {
+    console.log("Customization changed:", newCustomization);
+    setCustomization(newCustomization);
+    if (
+      newCustomization.period !== customization.period ||
+      newCustomization.tracks !== customization.tracks ||
+      newCustomization.metric !== customization.metric
+    ) {
+      loadUserData();
+    }
+  };
 
   const downloadAsImage = async () => {
-    if (!isLoggedIn) {
-      toast.error("Please log in to download your stats", {
-        duration: 3000,
-        position: "top-center",
-      });
-      return;
-    }
-
     if (receiptRef.current) {
       try {
-        const loadingToast = toast.loading("Generating image...", {
+        toast.loading("Generating image...", {
           duration: 2000,
           position: "top-center",
         });
@@ -574,15 +461,19 @@ export default function SpotifyReceiptify() {
         const originalWidth = receiptRef.current.style.width;
         const originalHeight = receiptRef.current.style.height;
 
-        // Set fixed width and height
-        receiptRef.current.style.width = "758px";
-        receiptRef.current.style.height =
-          customization.tracks === 10 ? "1384px" : originalHeight;
+        // Set fixed width
+        receiptRef.current.style.width = "766px";
 
-        // Generate the image with specified dimensions
+        // Calculate height based on metric type and number of items
+        let height;
+        if (customization.tracks === 10) {
+          height = "1384px"; // Original height for 10 tracks/artists
+        }
+
+        // Generate the image with calculated dimensions
         const dataUrl = await domtoimage.toPng(receiptRef.current, {
           width: 758,
-          height: customization.tracks === 10 ? 1384 : parseInt(originalHeight),
+          height: parseInt(originalHeight),
           style: {
             transform: "scale(1)",
             transformOrigin: "top left",
@@ -599,7 +490,6 @@ export default function SpotifyReceiptify() {
         link.href = dataUrl;
         link.click();
 
-        toast.dismiss(loadingToast);
         toast.success("Image downloaded successfully!", {
           duration: 2000,
           position: "top-center",
@@ -643,16 +533,21 @@ export default function SpotifyReceiptify() {
     }
   };
 
-  if (isInitialLoad) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#121212] to-[#1DB954] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
-      </div>
-    );
-  }
-
+  // Show loading state when initially loading data
   if (!isLoggedIn) {
     return <LoginPage onLogin={() => setIsLoggedIn(true)} />;
+  }
+
+  // Show loading screen while fetching initial data
+  if (isLoadingTracks) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1DB954]"></div>
+          <p className="text-[#1DB954] text-lg">Loading your Spotify data...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -660,25 +555,22 @@ export default function SpotifyReceiptify() {
       <div className="flex flex-col lg:flex-row gap-4 w-full max-w-7xl mx-auto">
         <Card
           ref={receiptRef}
-          className={`w-full lg:w-3/5 border-none shadow-2xl rounded-xl overflow-hidden ${
-            customization.mode === "dark" ? "bg-[#181818]" : "bg-white"
-          } ${getFontClass(customization.font)}`}
+          className={`w-full lg:w-3/5 border-none shadow-2xl rounded-xl overflow-hidden ${customization.mode === "dark" ? "bg-[#181818]" : "bg-white"
+            } ${getFontClass(customization.font)}`}
         >
           {/* Header Section */}
           <CardHeader
-            className={`border-b p-3 sm:p-6 ${
-              customization.mode === "dark"
-                ? "border-[#282828] bg-[#282828]"
-                : "border-gray-100 bg-gray-50"
-            }`}
+            className={`border-b p-3 sm:p-6 ${customization.mode === "dark"
+              ? "border-[#282828] bg-[#282828]"
+              : "border-gray-100 bg-gray-50"
+              }`}
           >
             <div className="flex items-center justify-between w-full mb-4">
               <CardTitle
-                className={`text-2xl sm:text-4xl font-bold flex items-center ${
-                  customization.mode === "dark"
-                    ? "text-[#1DB954]"
-                    : "text-[#1DB954]"
-                }`}
+                className={`text-2xl sm:text-4xl font-bold flex items-center ${customization.mode === "dark"
+                  ? "text-[#1DB954]"
+                  : "text-[#1DB954]"
+                  }`}
               >
                 <Music className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3" />
                 <span>Receiptify+</span>
@@ -692,14 +584,14 @@ export default function SpotifyReceiptify() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="bg-[#1DB954] border-[#1DB954] hover:bg-[#22c75c]"
+                        className="bg-[#1DB954] border-[#1DB954] hover:bg-[#22c75c] hover:text-black"
                         onClick={handleShare}
                       >
-                        <Share2 className="h-4 w-4 text-black hover:text-white" />
+                        <Share2 className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Share Receiptify+</p>
+                      <p>Share Receiptify</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -710,14 +602,13 @@ export default function SpotifyReceiptify() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="bg-[#1DB954] border-[#1DB954] hover:bg-[#22c75c]"
+                        className="bg-[#1DB954] border-[#1DB954] hover:bg-[#22c75c] hover:text-black"
                         onClick={handleRefreshData}
                         disabled={isLoading}
                       >
                         <RefreshCw
-                          className={`h-4 w-4 text-black hover:text-white ${
-                            isLoading ? "animate-spin" : ""
-                          }`}
+                          className={`h-4 w-4 ${isLoading ? "animate-spin" : ""
+                            }`}
                         />
                       </Button>
                     </TooltipTrigger>
@@ -749,7 +640,7 @@ export default function SpotifyReceiptify() {
                       className="text-white hover:text-black hover:bg-[#1DB954] cursor-pointer"
                     >
                       <Share2 className="h-4 w-4 mr-2" />
-                      Share Receiptify+
+                      Share Receiptify
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleRefreshData}
@@ -757,9 +648,8 @@ export default function SpotifyReceiptify() {
                       className="text-white hover:text-black hover:bg-[#1DB954] cursor-pointer"
                     >
                       <RefreshCw
-                        className={`h-4 w-4 mr-2 ${
-                          isLoading ? "animate-spin" : ""
-                        }`}
+                        className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""
+                          }`}
                       />
                       Refresh Data
                     </DropdownMenuItem>
@@ -776,9 +666,9 @@ export default function SpotifyReceiptify() {
                     <HoverCardTrigger>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2">
-                          {userData.profileImage ? (
+                          {profileImage ? (
                             <img
-                              src={userData.profileImage}
+                              src={profileImage}
                               alt="Profile"
                               className="w-6 h-6 rounded-full"
                             />
@@ -786,40 +676,27 @@ export default function SpotifyReceiptify() {
                             <User className="w-5 h-5 text-[#1DB954]" />
                           )}
                           <span
-                            className={`text-base sm:text-lg font-medium ${
-                              customization.mode === "dark"
-                                ? "text-white"
-                                : "text-black"
-                            }`}
+                            className={`text-base sm:text-lg font-medium ${customization.mode === "dark"
+                              ? "text-white"
+                              : "text-black"
+                              }`}
                           >
-                            {userData.userName}
+                            {userName}
                           </span>
                         </div>
                         <Badge
                           variant="secondary"
                           className="bg-[#1DB954] text-black hover:bg-[#22c55e] flex-shrink-0"
                         >
-                          {userData.badge}
+                          {badge}
                         </Badge>
                       </div>
                     </HoverCardTrigger>
-                    <HoverCardContent
-                      className={`w-72 sm:w-80 ${
-                        customization.mode === "dark"
-                          ? "bg-[#282828]"
-                          : "bg-white"
-                      } border-[#1DB954]`}
-                    >
+                    <HoverCardContent className="w-72 sm:w-80 bg-[#282828] border-[#1DB954]">
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <Headphones className="w-4 h-4 text-[#1DB954]" />
-                          <span
-                            className={`${
-                              customization.mode === "dark"
-                                ? "text-white"
-                                : "text-black"
-                            }`}
-                          >
+                          <span className="text-white">
                             {formatListeningTime(
                               userStats.totalMinutesListened
                             )}{" "}
@@ -828,25 +705,13 @@ export default function SpotifyReceiptify() {
                         </div>
                         <div className="flex items-center space-x-2">
                           <Clock className="w-4 h-4 text-[#1DB954]" />
-                          <span
-                            className={`${
-                              customization.mode === "dark"
-                                ? "text-white"
-                                : "text-black"
-                            }`}
-                          >
+                          <span className="text-white">
                             Most active: {userStats.favoriteDayTime}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Heart className="w-4 h-4 text-[#1DB954]" />
-                          <span
-                            className={`${
-                              customization.mode === "dark"
-                                ? "text-white"
-                                : "text-black"
-                            }`}
-                          >
+                          <span className="text-white">
                             {userStats.totalLikedSongs} liked songs
                           </span>
                         </div>
@@ -861,8 +726,8 @@ export default function SpotifyReceiptify() {
                     {customization.period === "short_term"
                       ? "Last 4 weeks"
                       : customization.period === "medium_term"
-                      ? "Last 6 months"
-                      : "All time"}
+                        ? "Last 6 months"
+                        : "All time"}
                   </span>
                 </div>
               </div>
@@ -876,68 +741,100 @@ export default function SpotifyReceiptify() {
 
           {/* Content Section */}
           <CardContent
-            className={`p-3 sm:p-6 ${
-              customization.mode === "dark"
-                ? "bg-gradient-to-b from-[#181818] to-[#282828]"
-                : "bg-gradient-to-b from-white to-gray-50"
-            }`}
+            className={`p-3 sm:p-6 ${customization.mode === "dark"
+              ? "bg-gradient-to-b from-[#181818] to-[#282828]"
+              : "bg-gradient-to-b from-white to-gray-50"
+              }`}
           >
             <div className="text-xl sm:text-2xl font-semibold text-[#1DB954] mb-4 sm:mb-6">
               {customization.metric === "top_tracks" && "Your Top Tracks"}
               {customization.metric === "top_artists" && "Your Top Artists"}
-              {customization.metric === "stats" && "Your Stats"}
               {customization.metric === "top_genres" && "Your Top Genres"}
+              {customization.metric === "stats" && "Your Stats"}
             </div>
 
-            {customization.metric === "top_tracks" && tracks.length > 0 && (
-              <>
-                {/* Top Track Card */}
-                <div
-                  className={`mb-6 sm:mb-8 ${
-                    customization.mode === "dark"
+            {customization.metric === "top_tracks" && (
+              tracks.length > 0 ? (
+                <>
+                  {/* Top Track Card */}
+                  <div
+                    className={`mb-6 sm:mb-8 ${customization.mode === "dark"
                       ? "bg-[#1e1e1e]"
                       : "bg-gray-50"
-                  } p-4 sm:p-6 rounded-lg shadow-lg relative overflow-hidden`}
-                >
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1DB954] via-[#22c55e] to-[#1DB954]"></div>
-                  <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                    <div className="flex-1">
-                      <div
-                        className={`text-2xl sm:text-3xl font-bold mb-2 text-center sm:text-left ${
-                          customization.mode === "dark"
+                      } p-4 sm:p-6 rounded-lg shadow-lg relative overflow-hidden`}
+                  >
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1DB954] via-[#22c55e] to-[#1DB954]"></div>
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                      <div className="flex-1">
+                        <div
+                          className={`text-2xl sm:text-3xl font-bold mb-2 text-center sm:text-left ${customization.mode === "dark"
                             ? "text-white"
                             : "text-gray-900"
-                        } ${getFontClass(customization.font)}`}
-                      >
-                        {tracks[0].name}
-                      </div>
-                      <div
-                        className={`text-lg sm:text-xl text-[#1DB954] mb-4 text-center sm:text-left ${getFontClass(
-                          customization.font
-                        )}`}
-                      >
-                        {tracks[0].artist}
-                      </div>
-                      <div
-                        className={`flex items-center justify-center sm:justify-start text-sm ${
-                          customization.mode === "dark"
+                            } ${getFontClass(customization.font)}`}
+                        >
+                          {tracks[0].name}
+                        </div>
+                        <div
+                          className={`text-lg sm:text-xl text-[#1DB954] mb-4 text-center sm:text-left ${getFontClass(
+                            customization.font
+                          )}`}
+                        >
+                          {tracks[0].artist}
+                        </div>
+                        <div
+                          className={`flex items-center justify-center sm:justify-start text-sm ${customization.mode === "dark"
                             ? "text-[#b3b3b3]"
                             : "text-gray-600"
-                        }`}
-                      >
-                        <Clock className="w-4 h-4 mr-2" />
-                        {tracks[0].duration}
+                            }`}
+                        >
+                          <Clock className="w-4 h-4 mr-2" />
+                          {tracks[0].duration}
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      className={`w-24 h-24 sm:w-32 sm:h-32 bg-[#1DB954] rounded-full flex items-center justify-center relative ${
-                        customization.mode === "dark"
+                      <div
+                        className={`w-24 h-24 sm:w-32 sm:h-32 bg-[#1DB954] rounded-full flex items-center justify-center relative ${customization.mode === "dark"
                           ? "border-[#1e1e1e]"
                           : "border-gray-50"
-                      } border-8`}
-                    >
-                      {/* Play button that appears on hover */}
-                      <button
+                          } border-8`}
+                      >
+                        {/* Play button that appears on hover */}
+                        <button
+                          onClick={() => {
+                            const id = tracks[0].uri.split(":")[2];
+                            window.open(
+                              `https://open.spotify.com/track/${id}`,
+                              "_blank"
+                            );
+                          }}
+                          className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer hover:bg-black/70 z-10 rounded-full"
+                          aria-label={`Play ${tracks[0].name}`}
+                        >
+                          <Play className="w-8 h-8 text-[#1DB954]" />
+                        </button>
+                        {tracks[0].album?.images[0]?.url ? (
+                          <img
+                            src={tracks[0].album.images[0].url}
+                            alt={tracks[0].name}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <div
+                            className={`w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center ${customization.mode === "dark"
+                              ? "bg-[#1e1e1e]"
+                              : "bg-gray-100"
+                              }`}
+                          >
+                            <Music className="w-8 h-8 sm:w-12 sm:h-12 text-[#1DB954]" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                      <div className="text-xl sm:text-2xl font-bold text-[#1DB954]">
+                        #1 Top Track
+                      </div>
+                      <Button
+                        className="w-full sm:w-auto bg-[#1DB954] hover:bg-[#22c55e] text-black"
                         onClick={() => {
                           const id = tracks[0].uri.split(":")[2];
                           window.open(
@@ -945,169 +842,183 @@ export default function SpotifyReceiptify() {
                             "_blank"
                           );
                         }}
-                        className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer hover:bg-black/70 z-10 rounded-full"
-                        aria-label={`Play ${tracks[0].name}`}
-                      >
-                        <Play className="w-8 h-8 text-[#1DB954]" />
-                      </button>
-                      {tracks[0].album?.images[0]?.url ? (
-                        <img
-                          src={tracks[0].album.images[0].url}
-                          alt={tracks[0].name}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        <div
-                          className={`w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center ${
-                            customization.mode === "dark"
-                              ? "bg-[#1e1e1e]"
-                              : "bg-gray-100"
-                          }`}
-                        >
-                          <Music className="w-8 h-8 sm:w-12 sm:h-12 text-[#1DB954]" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="text-xl sm:text-2xl font-bold text-[#1DB954]">
-                      #1 Top Track
-                    </div>
-                    <Button
-                      className="w-full sm:w-auto bg-[#1DB954] hover:bg-[#22c55e] text-black"
-                      onClick={() => {
-                        const id = tracks[0].uri.split(":")[2];
-                        window.open(
-                          `https://open.spotify.com/track/${id}`,
-                          "_blank"
-                        );
-                      }}
-                    >
-                      <Play className="w-4 h-4 mr-2" />
-                      Open in Spotify
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Track List */}
-                {isLoadingTracks ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1DB954]"></div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {tracks.slice(1).map((track, index) => (
-                      <MemoizedTrackItem
-                        key={track.id}
-                        track={track}
-                        index={index}
-                        customization={customization}
-                        onTrackClick={(track) => {
-                          const id = track.uri.split(":")[2];
-                          window.open(
-                            `https://open.spotify.com/track/${id}`,
-                            "_blank"
-                          );
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-            {customization.metric === "top_artists" && (
-              <div className="space-y-6">
-                {/* Top Artist Card */}
-                {topArtists.length > 0 && (
-                  <div className="mb-6 sm:mb-8 bg-[#1e1e1e] p-4 sm:p-6 rounded-lg shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1DB954] via-[#22c55e] to-[#1DB954]"></div>
-                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                      <div className="flex-1">
-                        <div className="text-2xl sm:text-3xl font-bold text-white mb-2 text-center sm:text-left">
-                          {topArtists[0].name}
-                        </div>
-                        <div className="text-lg sm:text-xl text-[#1DB954] mb-4 text-center sm:text-left">
-                          {topArtists[0].genres.slice(0, 2).join(", ")}
-                        </div>
-                        <div className="flex items-center justify-center sm:justify-start text-sm text-[#b3b3b3]">
-                          <User className="w-4 h-4 mr-2" />
-                          {topArtists[0].followers.total.toLocaleString()}{" "}
-                          followers
-                        </div>
-                      </div>
-                      <div className="w-24 h-24 sm:w-32 sm:h-32 bg-[#1DB954] rounded-full flex items-center justify-center border-8 border-[#1e1e1e]">
-                        {topArtists[0].images[0]?.url ? (
-                          <img
-                            src={topArtists[0].images[0].url}
-                            alt={topArtists[0].name}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 sm:w-24 sm:h-24 bg-[#1e1e1e] rounded-full flex items-center justify-center">
-                            <User className="w-8 h-8 sm:w-12 sm:h-12 text-[#1DB954]" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                      <div className="text-xl sm:text-2xl font-bold text-[#1DB954]">
-                        #1 Top Artist
-                      </div>
-                      <Button
-                        className="w-full sm:w-auto bg-[#1DB954] hover:bg-[#22c55e] text-black"
-                        onClick={() =>
-                          window.open(
-                            topArtists[0].external_urls.spotify,
-                            "_blank"
-                          )
-                        }
                       >
                         <Play className="w-4 h-4 mr-2" />
                         Open in Spotify
                       </Button>
                     </div>
                   </div>
-                )}
 
-                {/* Artist List */}
-                <div className="space-y-4">
-                  {topArtists.slice(1).map((artist, index) => (
-                    <div
-                      key={artist.id}
-                      className="flex justify-between items-center group hover:bg-[#282828] p-2 sm:p-3 rounded-md transition-all duration-300 ease-in-out"
-                    >
-                      <div className="flex items-center space-x-2 sm:space-x-4">
-                        <span className="text-[#1DB954] w-6 text-right font-mono text-sm sm:text-base">
-                          {(index + 2).toString().padStart(2, "0")}
-                        </span>
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#282828] flex items-center justify-center rounded-md overflow-hidden group-hover:bg-[#1DB954] transition-colors duration-300">
-                          {artist.images[0]?.url ? (
+                  {/* Track List */}
+                  {isLoadingTracks ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1DB954]"></div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {tracks.slice(1).map((track, index) => (
+                        <div
+                          key={track.id}
+                          className="flex justify-between items-center group hover:bg-[#282828] p-2 sm:p-3 rounded-md transition-all duration-300 ease-in-out"
+                        >
+                          <div className="flex items-center space-x-2 sm:space-x-4">
+                            <span className="text-[#1DB954] w-6 text-right font-mono text-sm sm:text-base">
+                              {(index + 2).toString().padStart(2, "0")}
+                            </span>
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#282828] flex items-center justify-center rounded-md overflow-hidden group-hover:bg-[#1DB954] transition-colors duration-300 relative">
+                              {/* Play button that appears on hover */}
+                              <button
+                                onClick={() => {
+                                  const id = track.uri.split(":")[2];
+                                  window.open(
+                                    `https://open.spotify.com/track/${id}`,
+                                    "_blank"
+                                  );
+                                }}
+                                className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer hover:bg-black/70 z-10"
+                                aria-label={`Play ${track.name}`}
+                              >
+                                <Play className="w-6 h-6 text-[#1DB954]" />
+                              </button>
+                              {track.album?.images[0]?.url ? (
+                                <img
+                                  src={track.album.images[0].url}
+                                  alt={track.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <Music className="w-5 h-5 sm:w-6 sm:h-6 text-[#b3b3b3] group-hover:text-black transition-colors duration-300" />
+                              )}
+                            </div>
+                            <div>
+                              <div
+                                className={`font-medium transition-colors duration-300 text-sm sm:text-base ${customization.mode === "dark"
+                                  ? "text-white group-hover:text-[#1DB954]"
+                                  : "text-gray-900 group-hover:text-[#1DB954]"
+                                  } ${getFontClass(customization.font)}`}
+                              >
+                                {track.name}
+                              </div>
+                              <div
+                                className={`text-xs sm:text-sm text-[#b3b3b3] ${getFontClass(
+                                  customization.font
+                                )}`}
+                              >
+                                {track.artist}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-xs sm:text-sm text-[#b3b3b3] font-mono">
+                            {track.duration}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-[#b3b3b3] text-sm text-center py-4">
+                  No tracks data available
+                </div>
+              ))}
+            {customization.metric === "top_artists" && (
+              topArtists.length > 0 ? (
+                <div className="space-y-6">
+                  {/* Top Artist Card */}
+                  {topArtists.length > 0 && (
+                    <div className="mb-6 sm:mb-8 bg-[#1e1e1e] p-4 sm:p-6 rounded-lg shadow-lg relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1DB954] via-[#22c55e] to-[#1DB954]"></div>
+                      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                        <div className="flex-1">
+                          <div className="text-2xl sm:text-3xl font-bold text-white mb-2 text-center sm:text-left">
+                            {topArtists[0].name}
+                          </div>
+                          <div className="text-lg sm:text-xl text-[#1DB954] mb-4 text-center sm:text-left">
+                            {topArtists[0].genres.slice(0, 2).join(", ")}
+                          </div>
+                          <div className="flex items-center justify-center sm:justify-start text-sm text-[#b3b3b3]">
+                            <User className="w-4 h-4 mr-2" />
+                            {topArtists[0].followers.total.toLocaleString()}{" "}
+                            followers
+                          </div>
+                        </div>
+                        <div className="w-24 h-24 sm:w-32 sm:h-32 bg-[#1DB954] rounded-full flex items-center justify-center border-8 border-[#1e1e1e]">
+                          {topArtists[0].images[0]?.url ? (
                             <img
-                              src={artist.images[0].url}
-                              alt={artist.name}
-                              className="w-full h-full object-cover"
+                              src={topArtists[0].images[0].url}
+                              alt={topArtists[0].name}
+                              className="w-full h-full rounded-full object-cover"
                             />
                           ) : (
-                            <User className="w-5 h-5 sm:w-6 sm:h-6 text-[#b3b3b3] group-hover:text-black transition-colors duration-300" />
+                            <div className="w-16 h-16 sm:w-24 sm:h-24 bg-[#1e1e1e] rounded-full flex items-center justify-center">
+                              <User className="w-8 h-8 sm:w-12 sm:h-12 text-[#1DB954]" />
+                            </div>
                           )}
                         </div>
-                        <div>
-                          <div className="font-medium text-white group-hover:text-[#1DB954] transition-colors duration-300 text-sm sm:text-base">
-                            {artist.name}
-                          </div>
-                          <div className="text-xs sm:text-sm text-[#b3b3b3]">
-                            {artist.genres.slice(0, 2).join(", ")}
-                          </div>
-                        </div>
                       </div>
-                      <div className="text-xs sm:text-sm text-[#b3b3b3]">
-                        {artist.followers.total.toLocaleString()} followers
+                      <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div className="text-xl sm:text-2xl font-bold text-[#1DB954]">
+                          #1 Top Artist
+                        </div>
+                        <Button
+                          className="w-full sm:w-auto bg-[#1DB954] hover:bg-[#22c55e] text-black"
+                          onClick={() =>
+                            window.open(
+                              topArtists[0].external_urls.spotify,
+                              "_blank"
+                            )
+                          }
+                        >
+                          <Play className="w-4 h-4 mr-2" />
+                          Open in Spotify
+                        </Button>
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Artist List */}
+                  <div className="space-y-4">
+                    {topArtists.slice(1).map((artist, index) => (
+                      <div
+                        key={artist.id}
+                        className="flex justify-between items-center group hover:bg-[#282828] p-2 sm:p-3 rounded-md transition-all duration-300 ease-in-out"
+                      >
+                        <div className="flex items-center space-x-2 sm:space-x-4">
+                          <span className="text-[#1DB954] w-6 text-right font-mono text-sm sm:text-base">
+                            {(index + 2).toString().padStart(2, "0")}
+                          </span>
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#282828] flex items-center justify-center rounded-md overflow-hidden group-hover:bg-[#1DB954] transition-colors duration-300">
+                            {artist.images[0]?.url ? (
+                              <img
+                                src={artist.images[0].url}
+                                alt={artist.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <User className="w-5 h-5 sm:w-6 sm:h-6 text-[#b3b3b3] group-hover:text-black transition-colors duration-300" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium text-white group-hover:text-[#1DB954] transition-colors duration-300 text-sm sm:text-base">
+                              {artist.name}
+                            </div>
+                            <div className="text-xs sm:text-sm text-[#b3b3b3]">
+                              {artist.genres.slice(0, 2).join(", ")}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-xs sm:text-sm text-[#b3b3b3]">
+                          {artist.followers.total.toLocaleString()} followers
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-[#b3b3b3] text-sm text-center py-4">
+                  No artists data available
+                </div>
+              ))}
             {customization.metric === "stats" && (
               <div className="space-y-6">
                 {/* Overall Stats Card */}
@@ -1237,11 +1148,10 @@ export default function SpotifyReceiptify() {
                       (time) => (
                         <div
                           key={time}
-                          className={`p-3 rounded-lg text-center ${
-                            time === userStats.favoriteDayTime
-                              ? "bg-[#1DB954] text-black"
-                              : "bg-[#1e1e1e] text-[#b3b3b3]"
-                          }`}
+                          className={`p-3 rounded-lg text-center ${time === userStats.favoriteDayTime
+                            ? "bg-[#1DB954] text-black"
+                            : "bg-[#1e1e1e] text-[#b3b3b3]"
+                            }`}
                         >
                           <div className="text-sm font-medium">{time}</div>
                         </div>
@@ -1313,9 +1223,8 @@ export default function SpotifyReceiptify() {
           {/* Footer Section */}
           <Separator className="bg-[#282828]" />
           <CardFooter
-            className={`flex flex-col sm:flex-row justify-between p-3 sm:p-6 ${
-              customization.mode === "dark" ? "bg-[#282828]" : "bg-gray-50"
-            } ${getFontClass(customization.font)}`}
+            className={`flex flex-col sm:flex-row justify-between p-3 sm:p-6 ${customization.mode === "dark" ? "bg-[#282828]" : "bg-gray-50"
+              } ${getFontClass(customization.font)}`}
           >
             <div className="flex items-center space-x-2 text-[#b3b3b3]">
               <Music className="w-4 h-4" />
@@ -1325,7 +1234,7 @@ export default function SpotifyReceiptify() {
             </div>
             <div className="flex items-center text-neutral-400">
               <span className="text-xs sm:text-sm font-medium">
-                receiptify-plus.vercel.app
+                spotify-receiptify.vercel.app
               </span>
             </div>
             <div className="flex items-center space-x-2 text-[#b3b3b3]">
@@ -1344,7 +1253,7 @@ export default function SpotifyReceiptify() {
             handleCustomize={handleCustomize}
             downloadAsImage={downloadAsImage}
             handleCreatePlaylist={handleCreatePlaylist}
-            userName={userData.userName}
+            userName={userName}
             handleShare={handleShare}
           />
         </div>

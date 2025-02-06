@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Info, Music, Github, Twitter } from "lucide-react";
+import { Info, Music, Github } from "lucide-react";
 import Header from "@/components/Header";
 
 export default function AboutPage() {
@@ -74,7 +74,7 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <div className="flex justify-center">
+            <div className="flex justify-center space-x-4">
               <a
                 href="https://github.com/ejatapibeda/receiptify-plus"
                 className="text-[#b3b3b3] hover:text-[#1DB954] transition-colors duration-300"
@@ -84,17 +84,8 @@ export default function AboutPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2 text-center text-sm text-[#b3b3b3]">
-            <p>
-              Made by{" "}
-              <a
-                href="https://github.com/ejatapibeda"
-                target="_blank"
-                className="text-green-500 hover:text-green-400"
-              >
-                ejatapibeda
-              </a>
-            </p>
-            <p className="text-xs">© 2025 Receiptify+</p>
+            <p>Made with ❤️ by the Receiptify+ Team</p>
+            <p className="text-xs">Version 1.0.0 | © 2025 Receiptify+</p>
           </CardFooter>
         </Card>
       </div>

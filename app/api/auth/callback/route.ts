@@ -6,18 +6,6 @@ const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI;
 
 export async function POST(request: Request) {
   try {
-    if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
-      console.error('Missing environment variables:', {
-        hasClientId: !!CLIENT_ID,
-        hasClientSecret: !!CLIENT_SECRET,
-        hasRedirectUri: !!REDIRECT_URI
-      });
-      return NextResponse.json(
-        { error: "Server configuration error - missing environment variables" },
-        { status: 500 }
-      );
-    }
-
     const { code } = await request.json();
 
     if (!code) {
@@ -49,29 +37,20 @@ export async function POST(request: Request) {
 
     const data = await tokenResponse.json();
 
-    console.log('Token response:', {
-      status: tokenResponse.status,
-      statusText: tokenResponse.statusText,
-      data: data,
-      usedRedirectUri: REDIRECT_URI
-    });
-
     if (!tokenResponse.ok) {
       return NextResponse.json(
-        {
+        { 
           error: "Failed to exchange authorization code",
-          details: data,
-          status: tokenResponse.status,
-          statusText: tokenResponse.statusText
+          details: data
         },
-        { status: tokenResponse.status }
+        { status: 400 }
       );
     }
 
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
-      {
+      { 
         error: "Internal server error",
         details: error instanceof Error ? error.message : 'Unknown error'
       },

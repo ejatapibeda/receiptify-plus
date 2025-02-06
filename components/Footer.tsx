@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Github, Twitter, Mail, Music2 } from "lucide-react";
+import { Github, Mail, Music2 } from "lucide-react";
 
 export function Footer() {
   return (
@@ -84,7 +84,7 @@ export function Footer() {
             </h3>
             <div className="flex space-x-5">
               <Link
-                href="https://github.com/ejatapibeda/receiptify-plus"
+                href="https://github.com/ejatapibeda"
                 target="_blank"
                 className="group"
               >
@@ -107,15 +107,14 @@ export function Footer() {
             <p className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors">
               © {new Date().getFullYear()} Receiptify+. All rights reserved.
             </p>
-            <p className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors">
-              Made by{" "}
-              <a
-                href="https://github.com/ejatapibeda"
-                target="_blank"
-                className="text-green-500 hover:text-green-400"
-              >
-                ejatapibeda
-              </a>
+            <p className="text-sm text-zinc-400 flex items-center space-x-2">
+              <span className="hover:text-zinc-300 transition-colors">
+                Made with
+              </span>
+              <span className="text-green-500 animate-pulse">♥️</span>
+              <span className="hover:text-zinc-300 transition-colors">
+                by ejatapibeda
+              </span>
             </p>
           </div>
         </div>

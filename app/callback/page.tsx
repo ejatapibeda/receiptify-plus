@@ -29,52 +29,20 @@ export default function CallbackPage() {
       }
 
       try {
-        // Log environment variables presence
-        console.log('Environment check:', {
-          hasClientId: !!process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID,
-          hasClientSecret: !!process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET,
-          hasRedirectUri: !!process.env.NEXT_PUBLIC_REDIRECT_URI,
-          redirectUri: process.env.NEXT_PUBLIC_REDIRECT_URI
-        });
-
-        const params = new URLSearchParams({
-          grant_type: 'authorization_code',
-          code: code,
-          redirect_uri: process.env.NEXT_PUBLIC_REDIRECT_URI!,
-        });
-
-        const authHeader = Buffer.from(
-          `${process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID}:${process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET}`
-        ).toString('base64');
-
-        console.log('Making token request...');
-        const response = await fetch('https://accounts.spotify.com/api/token', {
-          method: 'POST',
+        const response = await fetch("/api/auth/callback", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${authHeader}`,
+            "Content-Type": "application/json",
           },
-          body: params,
+          body: JSON.stringify({ code }),
         });
 
         const data = await response.json();
 
-        console.log('Token response:', {
-          status: response.status,
-          statusText: response.statusText,
-          hasError: !!data.error,
-          errorDescription: data.error_description,
-          hasAccessToken: !!data.access_token,
-        });
-
         if (!response.ok) {
           throw new Error(
-            `Failed to exchange code: ${data.error_description || data.error || response.statusText}`
+            data.error || data.details || "Failed to exchange code for tokens"
           );
-        }
-
-        if (!data.access_token) {
-          throw new Error('No access token received from Spotify');
         }
 
         // Store tokens

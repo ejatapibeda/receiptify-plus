@@ -106,32 +106,32 @@ export default function CustomizationPanel({
             >
               <SelectTrigger
                 id="metric"
-                className="w-full bg-[#282828] border border-transparent text-white text-sm sm:text-base h-9 sm:h-10 hover:bg-[#505050] hover:border-[#1DB954] hover:text-[#1DB954] transition-all duration-300 focus:border-[#1DB954] focus:ring-1 focus:ring-[#1DB954]"
+                className="w-full bg-[#282828] border border-transparent text-white text-sm sm:text-base h-9 sm:h-10 hover:bg-[#323232] hover:border-[#1DB954] transition-all duration-300 focus:border-[#1DB954] focus:ring-1 focus:ring-[#1DB954]"
               >
                 <SelectValue placeholder="Select metric" />
               </SelectTrigger>
-              <SelectContent className="bg-[#282828] text-sm sm:text-base border border-[#1DB954]/20 animate-in fade-in-80 zoom-in-95 hover:border-[#1DB954] transition-all duration-300">
+              <SelectContent className="bg-[#282828] text-sm sm:text-base border border-[#1DB954]/20 animate-in fade-in-80 zoom-in-95">
                 <SelectItem
                   value="top_tracks"
-                  className="text-white hover:text-[#1DB954] hover:bg-[#505050] data-[highlighted]:bg-[#505050] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="text-white hover:bg-[#1DB954] hover:text-black transition-colors"
                 >
                   Top Tracks
                 </SelectItem>
                 <SelectItem
                   value="top_artists"
-                  className="text-white hover:text-[#1DB954] hover:bg-[#505050] data-[highlighted]:bg-[#505050] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="text-white hover:bg-[#1DB954] hover:text-black transition-colors"
                 >
                   Top Artists
                 </SelectItem>
                 <SelectItem
                   value="top_genres"
-                  className="text-white hover:text-[#1DB954] hover:bg-[#505050] data-[highlighted]:bg-[#505050] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="text-white hover:bg-[#1DB954] hover:text-black transition-colors"
                 >
                   Top Genres
                 </SelectItem>
                 <SelectItem
                   value="stats"
-                  className="text-white hover:text-[#1DB954] hover:bg-[#505050] data-[highlighted]:bg-[#505050] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="text-white hover:bg-[#1DB954] hover:text-black transition-colors"
                 >
                   Stats
                 </SelectItem>
@@ -154,26 +154,26 @@ export default function CustomizationPanel({
             >
               <SelectTrigger
                 id="period"
-                className="w-full bg-[#282828] border border-transparent text-white text-sm sm:text-base h-9 sm:h-10 hover:bg-[#505050] hover:border-[#1DB954] hover:text-[#1DB954] transition-all duration-300 focus:border-[#1DB954] focus:ring-1 focus:ring-[#1DB954]"
+                className="w-full bg-[#282828] border-none text-white text-sm sm:text-base h-9 sm:h-10 hover:bg-[#323232] transition-colors duration-200"
               >
                 <SelectValue placeholder="Select time period" />
               </SelectTrigger>
-              <SelectContent className="bg-[#282828] text-sm sm:text-base border border-[#1DB954]/20 animate-in fade-in-80 zoom-in-95 hover:border-[#1DB954] transition-all duration-300">
+              <SelectContent className="bg-[#282828] text-sm sm:text-base border border-[#1DB954]/20 animate-in fade-in-80 zoom-in-95">
                 <SelectItem
                   value="short_term"
-                  className="text-white hover:text-[#1DB954] hover:bg-[#505050] data-[highlighted]:bg-[#505050] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="text-white hover:bg-[#1DB954] hover:text-black transition-colors"
                 >
                   Last 4 weeks
                 </SelectItem>
                 <SelectItem
                   value="medium_term"
-                  className="text-white hover:text-[#1DB954] hover:bg-[#505050] data-[highlighted]:bg-[#505050] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="text-white hover:bg-[#1DB954] hover:text-black transition-colors"
                 >
                   Last 6 months
                 </SelectItem>
                 <SelectItem
                   value="long_term"
-                  className="text-white hover:text-[#1DB954] hover:bg-[#505050] data-[highlighted]:bg-[#505050] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="text-white hover:bg-[#1DB954] hover:text-black transition-colors"
                 >
                   All time
                 </SelectItem>
@@ -267,26 +267,26 @@ export default function CustomizationPanel({
             >
               <SelectTrigger
                 id="font"
-                className="w-full bg-[#282828] border border-transparent text-white text-sm sm:text-base h-9 sm:h-10 hover:bg-[#505050] hover:border-[#1DB954] hover:text-[#1DB954] transition-all duration-300 focus:border-[#1DB954] focus:ring-1 focus:ring-[#1DB954]"
+                className="w-full bg-[#282828] border-none text-white text-sm sm:text-base h-9 sm:h-10 hover:bg-[#323232] transition-colors duration-200"
               >
                 <SelectValue placeholder="Select font" />
               </SelectTrigger>
-              <SelectContent className="bg-[#282828] text-sm sm:text-base border border-[#1DB954]/20 animate-in fade-in-80 zoom-in-95 hover:border-[#1DB954] transition-all duration-300">
+              <SelectContent className="bg-[#282828] text-sm sm:text-base border border-[#1DB954]/20 animate-in fade-in-80 zoom-in-95">
                 <SelectItem
                   value="sans"
-                  className="text-white hover:text-[#1DB954] hover:bg-[#505050] data-[highlighted]:bg-[#505050] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="text-white hover:bg-[#1DB954] hover:text-black transition-colors"
                 >
                   Sans-serif
                 </SelectItem>
                 <SelectItem
                   value="serif"
-                  className="text-white hover:text-[#1DB954] hover:bg-[#505050] data-[highlighted]:bg-[#505050] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="text-white hover:bg-[#1DB954] hover:text-black transition-colors"
                 >
                   Serif
                 </SelectItem>
                 <SelectItem
                   value="mono"
-                  className="text-white hover:text-[#1DB954] hover:bg-[#505050] data-[highlighted]:bg-[#505050] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="text-white hover:bg-[#1DB954] hover:text-black transition-colors"
                 >
                   Monospace
                 </SelectItem>
