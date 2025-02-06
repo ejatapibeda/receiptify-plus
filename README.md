@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Receiptify+ - Spotify Receiptify
 
-## Getting Started
+Receiptify+ is a unique web application that transforms your Spotify listening history into a beautiful receipt-style visualization. See your music taste represented in an innovative and shareable format!
 
-First, run the development server:
+## What Can You Do With Receiptify+?
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- 🎵 **View Your Listening History**: Get a detailed receipt of your most played tracks and artists
+- 🎨 **Customize Your Receipt**: Change the look and feel of your music receipt to match your style
+- 📊 **Explore Your Music Taste**: See statistics about your favorite genres and listening patterns
+- 📱 **Access Anywhere**: Works perfectly on both desktop and mobile devices
+- 🔄 **Real-time Updates**: Your receipt updates as you listen to more music
+- 🌐 **Share With Friends**: Easily share your music receipts on social media
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## About
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Receiptify+ brings a creative twist to how you view your Spotify listening history. Instead of a simple list, your music is presented as a receipt, complete with "costs" based on how much you've listened to each track. It's a fun and unique way to visualize your music taste and share it with others.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Features Overview
 
-## Learn More
+### Receipt Customization
+Change various aspects of your receipt:
+- Receipt style and layout
+- Font types and sizes
+- Custom header text
+- Personal messages
 
-To learn more about Next.js, take a look at the following resources:
+### Genre Analysis
+Discover insights about your music taste:
+- Top genres you listen to
+- Genre distribution
+- Listening pattern analysis
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Privacy & Security
+- Secure Spotify integration
+- Private by default
+- Control what you share
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+Receiptify+ is configured to be deployed at the root path (/). This means you can access all features directly from the main domain without any additional path prefixes.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Support
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Visit our [Privacy Policy](privacy-policy) page to learn about how we handle your data.
+
+For questions or support, visit our [Contact](contact) page.
+
+---
+
+Happy listening! 🎵
